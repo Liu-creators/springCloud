@@ -4,8 +4,44 @@ server:
 spring:
   application:
     name: provider-service
+  cloud:
+    loadbalancer:
+      retry:
+        enabled: true
+    discovery:
+      client:
+        simple:
+          instances:
+            provider-service:
+              - uri: http://127.0.0.1:8081
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka 
+      defaultZone: http://127.0.0.1:8761/eureka/,http://127.0.0.1:8762/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    healthcheck:
+      enabled: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    lease-renewal-interval-in-seconds: 2
+    lease-expiration-duration-in-seconds: 5
+    status-page-url-path: /actuator/info
+    health-check-url-path: /actuator/health
+    metadata-map:
+      zone: zone1
+      group: provider
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    eureka:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
