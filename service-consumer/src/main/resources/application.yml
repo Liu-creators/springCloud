@@ -1,48 +1,51 @@
+# 服务消费者配置
 server:
-  port: 8082
+  port: 8082  # 服务端口
 
 spring:
   application:
-    name: consumer-service
+    name: consumer-service  # 服务名称
   cloud:
     loadbalancer:
       retry:
-        enabled: true
+        enabled: true  # 启用负载均衡重试
     discovery:
       client:
         simple:
           instances:
             provider-service:
-              - uri: http://127.0.0.1:8081
+              - uri: http://127.0.0.1:8081  # 服务提供者地址
 
+# Eureka客户端配置
 eureka:
   client:
     service-url:
+      # Eureka服务器地址，多个地址用逗号分隔
       defaultZone: http://127.0.0.1:8761/eureka/,http://127.0.0.1:8762/eureka/
-    register-with-eureka: true
-    fetch-registry: true
+    register-with-eureka: true  # 是否注册到Eureka
+    fetch-registry: true  # 是否从Eureka获取注册表
     healthcheck:
-      enabled: true
+      enabled: true  # 启用健康检查
   instance:
-    prefer-ip-address: true
-    instance-id: ${spring.cloud.client.ip-address}:${server.port}
-    lease-renewal-interval-in-seconds: 2
-    lease-expiration-duration-in-seconds: 5
-    status-page-url-path: /actuator/info
-    health-check-url-path: /actuator/health
-    metadata-map:
+    prefer-ip-address: true  # 使用IP地址而不是主机名
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}  # 实例ID格式
+    lease-renewal-interval-in-seconds: 2  # 心跳间隔
+    lease-expiration-duration-in-seconds: 5  # 租约过期时间
+    status-page-url-path: /actuator/info  # 状态页面路径
+    health-check-url-path: /actuator/health  # 健康检查路径
+    metadata-map:  # 元数据信息
       zone: zone1
       group: consumer
 
+# Actuator监控配置
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "*"  # 暴露所有端点
   health:
     eureka:
-      enabled: true
-
+      enabled: true  # 启用Eureka健康检查
   endpoint:
     health:
-      show-details: always 
+      show-details: always  # 显示健康检查详细信息 
