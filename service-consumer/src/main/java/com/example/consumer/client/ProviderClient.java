@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.GetMapping;
  * 
  * @FeignClient 注解说明：
  * name: 指定服务提供者的服务名称
- * fallback: 指定服务降级处理类
+ * fallbackFactory: 指定服务降级处理工厂，可以获取异常信息
  * configuration: 指定Feign配置类
  */
 @FeignClient(name = "provider-service", 
-    fallback = ProviderClientFallback.class,
+    fallbackFactory = ProviderClientFallbackFactory.class,
     configuration = FeignConfig.class)
 public interface ProviderClient {
     

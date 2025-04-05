@@ -42,12 +42,12 @@ springcloud-demo/
 1. 启动Eureka注册中心（两个实例）：
 ```bash
 cd eureka-server
-mvn spring-boot:run -Dspring.profiles.active=peer1
+mvn spring-boot:run -Dspring-boot.run.profiles=peer1
 ```
 在另一个终端：
 ```bash
 cd eureka-server
-mvn spring-boot:run -Dspring.profiles.active=peer2
+mvn spring-boot:run -Dspring-boot.run.profiles.active=peer2
 ```
 
 2. 启动服务提供者：

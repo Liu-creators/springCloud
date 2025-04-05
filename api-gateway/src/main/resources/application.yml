@@ -1,9 +1,14 @@
 server:
-  port: 8080
+  port: 8088
 
 spring:
   application:
     name: api-gateway
+  # 禁用Redis自动配置
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
   cloud:
     gateway:
       discovery:
@@ -16,21 +21,51 @@ spring:
           predicates:
             - Path=/consumer/**
           filters:
-            - StripPrefix=1
+            - RewritePath=/consumer/(?<segment>.*), /${segment}
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 1000
         - id: provider-service
           uri: lb://provider-service
           predicates:
             - Path=/provider/**
           filters:
             - StripPrefix=1
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 1000
+      # 暂时注释Redis限流配置
+      # default-filters:
+      #   - name: RequestRateLimiter
+      #     args:
+      #       redis-rate-limiter.replenishRate: 10
+      #       redis-rate-limiter.burstCapacity: 20
+      #       key-resolver: "#{@ipKeyResolver}"
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
 
 eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:8761/eureka/,http://127.0.0.1:8762/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    healthcheck:
+      enabled: true
+    # 添加重试机制
+    initial-instance-info-replication-interval-seconds: 5
+    registry-fetch-interval-seconds: 5
   instance:
     prefer-ip-address: true
     instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    lease-renewal-interval-in-seconds: 2
+    lease-expiration-duration-in-seconds: 5
+    status-page-url-path: /actuator/info
+    health-check-url-path: /actuator/health
 
 management:
   endpoints:
@@ -39,4 +74,25 @@ management:
         include: "*"
   endpoint:
     health:
-      show-details: always 
+      show-details: always
+  health:
+    eureka:
+      enabled: true
+    # 禁用Redis健康检查
+    redis:
+      enabled: false
+
+# 日志配置，方便调试
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.http.server.reactive: INFO
+    org.springframework.web.reactive: INFO
+    reactor.netty: INFO
+    com.example.gateway.filter: DEBUG  # 设置我们自己的过滤器日志级别为DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%15.15t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%15.15t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+  file:
+    name: logs/api-gateway.log
